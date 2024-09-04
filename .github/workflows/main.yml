@@ -11,24 +11,32 @@ jobs:
 
     steps:
     - name: Trigger Jenkins Job
+      shell: pwsh
       run: |
         $jenkins_url = "http://localhost:8080/job/calci-app-ci-cd/build?token=${{ secrets.JENKINS_API_TOKEN }}"
         $username = "${{ secrets.JENKINS_USERNAME }}"
         $api_token = "${{ secrets.JENKINS_API_TOKEN }}"
         
+        # Properly format the credentials
+        $credentials = "${username}:${api_token}"
+        $encodedCredentials = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($credentials))
+        
         $headers = @{
-          Authorization = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$username:$api_token"))
+          Authorization = "Basic $encodedCredentials"
         }
         
-        $response = Invoke-WebRequest -Uri $jenkins_url -Method Post -Headers $headers
-        
-        if ($response.StatusCode -ne 201) {
-          Write-Error "Failed to trigger Jenkins job. Status code: $($response.StatusCode)"
+        try {
+          $response = Invoke-WebRequest -Uri $jenkins_url -Method Post -Headers $headers
+          
+          if ($response.StatusCode -ne 201) {
+            Write-Error "Failed to trigger Jenkins job. Status code: $($response.StatusCode)"
+            Exit 1
+          }
+          else {
+            Write-Host "Successfully triggered Jenkins job."
+          }
+        }
+        catch {
+          Write-Error "Exception occurred: $_"
           Exit 1
         }
-        else {
-          Write-Host "Successfully triggered Jenkins job."
-        }
-      env:
-        JENKINS_USERNAME: ${{ secrets.JENKINS_USERNAME }}
-        JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
