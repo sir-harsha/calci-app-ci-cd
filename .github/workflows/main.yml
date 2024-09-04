@@ -1,0 +1,34 @@
+name: Trigger Jenkins Job on Push
+
+on:
+  push:
+    branches:
+      - main  # Update to your desired branch
+
+jobs:
+  trigger-jenkins:
+    runs-on: windows-latest
+
+    steps:
+    - name: Trigger Jenkins Job
+      run: |
+        $jenkins_url = "http://localhost:8080/job/ci-cd-calci-app/build?token=${{ secrets.JENKINS_API_TOKEN }}"
+        $username = "${{ secrets.JENKINS_USERNAME }}"
+        $api_token = "${{ secrets.JENKINS_API_TOKEN }}"
+        
+        $headers = @{
+          Authorization = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$username:$api_token"))
+        }
+        
+        $response = Invoke-WebRequest -Uri $jenkins_url -Method Post -Headers $headers
+        
+        if ($response.StatusCode -ne 201) {
+          Write-Error "Failed to trigger Jenkins job. Status code: $($response.StatusCode)"
+          Exit 1
+        }
+        else {
+          Write-Host "Successfully triggered Jenkins job."
+        }
+      env:
+        JENKINS_USERNAME: ${{ secrets.JENKINS_USERNAME }}
+        JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
