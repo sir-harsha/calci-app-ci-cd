@@ -12,7 +12,7 @@ jobs:
     steps:
     - name: Trigger Jenkins Job
       run: |
-        $jenkins_url = "http://localhost:8080/job/ci-cd-calci-app/build?token=${{ secrets.JENKINS_API_TOKEN }}"
+        $jenkins_url = "http://localhost:8080/job/calci-app-ci-cd/build?token=${{ secrets.JENKINS_API_TOKEN }}"
         $username = "${{ secrets.JENKINS_USERNAME }}"
         $api_token = "${{ secrets.JENKINS_API_TOKEN }}"
         
